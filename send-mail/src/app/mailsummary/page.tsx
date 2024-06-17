@@ -105,6 +105,7 @@ export default function MailSummary() {
       setIsProcessingSummary20(true);
       localStorage.setItem('isProcessingSummary20', 'true');
 
+      const currentDay = new Date().getDay();
       const currentTime = new Date();
       const currentHour = currentTime.getHours();
       const currentMinute = currentTime.getMinutes();
@@ -123,35 +124,38 @@ export default function MailSummary() {
           localStorage.setItem('intervalIdSummary20', intervalId.toString());
       };
 
-      const getTimeToNext21 = (currentHour: number, 
+      const getTimeToNextSunday20 = (currentHour: number, 
         currentMinute: number, 
         currentSecond: number, 
-        currentMillisecond: number
-      ) => {
-              const targetHour = 20; // 8 PM
-              const targetMinute = 0;
-              let delay = 0;
-
-              if (currentHour < targetHour || (currentHour === targetHour && currentMinute < targetMinute)) {
-                // Calculate delay to 8:00 PM today
-                delay = (targetHour - currentHour) * 3600000 +
-                        (targetMinute - currentMinute) * 60000 -
-                        currentSecond * 1000 - currentMillisecond;
-              } else {
-                  // Calculate delay to 8:00 PM the next day
-                  delay = (24 - currentHour + targetHour) * 3600000 +
-                          (targetMinute - currentMinute) * 60000 -
-                          currentSecond * 1000 - currentMillisecond;
-              }
-              return delay;
-            };
-
-      const timeToNext21 = getTimeToNext21(currentHour, currentMinute, currentSecond, currentMillisecond);
-
-      setAndStoreTimeout(() => {
-          startSendingMail();
-          setAndStoreInterval(startSendingMail, 24 * 3600000); // 24 hours interval
-      }, timeToNext21);
+        currentMillisecond: number, currentDay: number) => {
+        const targetHour = 20; // 8 PM
+        const targetMinute = 0; // 8:00 PM
+        let delay = 0;
+    
+        const daysUntilNextSunday = (7 - currentDay) % 7;
+    
+        if (daysUntilNextSunday === 0 && (currentHour < targetHour || (currentHour === targetHour && currentMinute < targetMinute))) {
+            // Today is Sunday and the time is before 8 PM
+            delay = (targetHour - currentHour) * 3600000 +
+                    (targetMinute - currentMinute) * 60000 -
+                    currentSecond * 1000 - currentMillisecond;
+        } else {
+            // Calculate delay to 8:00 PM on the next Sunday
+            delay = (daysUntilNextSunday * 24 - currentHour + targetHour) * 3600000 +
+                    (targetMinute - currentMinute) * 60000 -
+                    currentSecond * 1000 - currentMillisecond;
+        }
+    
+        return delay;
+    };
+    
+    const timeToNextSunday20 = getTimeToNextSunday20(currentHour, currentMinute, currentSecond, currentMillisecond, currentDay);
+    
+    setAndStoreTimeout(() => {
+        startSendingMail();
+        setAndStoreInterval(startSendingMail, 7 * 24 * 3600000); // 7 days interval (1 week)
+    }, timeToNextSunday20);
+    
 
       toast.success("Start successfully");
   } catch (error) {

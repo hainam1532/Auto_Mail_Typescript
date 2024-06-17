@@ -147,6 +147,7 @@ export default function MailAssembly() {
         setIsProcessingAssembly13(true);
         localStorage.setItem('isProcessingAssembly13', 'true');
 
+        const currentDay = new Date().getDay();
         const currentTime = new Date();
         const currentHour = currentTime.getHours();
         const currentMinute = currentTime.getMinutes();
@@ -168,32 +169,55 @@ export default function MailAssembly() {
         const getTimeToNext13 = (currentHour: number, 
           currentMinute: number, 
           currentSecond: number, 
-          currentMillisecond: number
-        ) => {
-                const targetHour = 13; // 13 AM
-                const targetMinute = 0; // 13:00 AM
-                let delay = 0;
-
-                if (currentHour < targetHour || (currentHour === targetHour && currentMinute < targetMinute)) {
-                    // Calculate delay to 13:00 AM today
-                    delay = (targetHour - currentHour) * 3600000 +
-                            (targetMinute - currentMinute) * 60000 -
-                            currentSecond * 1000 - currentMillisecond;
-                } else {
-                    // Calculate delay to 13:00 AM the next day
-                    delay = (24 - currentHour + targetHour) * 3600000 +
-                            (targetMinute - currentMinute) * 60000 -
-                            currentSecond * 1000 - currentMillisecond;
-                }
-                return delay;
-              };
-
-        const timeToNext13 = getTimeToNext13(currentHour, currentMinute, currentSecond, currentMillisecond);
-
-        setAndStoreTimeout(() => {
-            startSendingMail();
-            setAndStoreInterval(startSendingMail, 24 * 3600000); // 24 hours interval
-        }, timeToNext13);
+          currentMillisecond: number, 
+          currentDay: number) => {
+          const targetHour = 13; // 13:00 PM
+          const targetMinute = 0; // 13:00 PM
+          let delay = 0;
+      
+          const isSunday = currentDay === 0;
+          const isSaturday = currentDay === 6;
+          const isBeforeTargetTime = currentHour < targetHour || (currentHour === targetHour && currentMinute < targetMinute);
+      
+          if (isSunday) {
+              // Calculate delay to 13:00 PM on Monday
+              delay = (24 * (1 - currentDay + 7) + targetHour - currentHour) * 3600000 +
+                      (targetMinute - currentMinute) * 60000 -
+                      currentSecond * 1000 - currentMillisecond;
+          } else if (isSaturday && !isBeforeTargetTime) {
+              // Calculate delay to 13:00 PM on Monday
+              delay = (24 * (1 - currentDay + 7) + targetHour - currentHour) * 3600000 +
+                      (targetMinute - currentMinute) * 60000 -
+                      currentSecond * 1000 - currentMillisecond;
+          } else {
+              if (isBeforeTargetTime) {
+                  // Calculate delay to 13:00 PM today
+                  delay = (targetHour - currentHour) * 3600000 +
+                          (targetMinute - currentMinute) * 60000 -
+                          currentSecond * 1000 - currentMillisecond;
+              } else {
+                  // Calculate delay to 13:00 PM the next day
+                  delay = (24 - currentHour + targetHour) * 3600000 +
+                          (targetMinute - currentMinute) * 60000 -
+                          currentSecond * 1000 - currentMillisecond;
+              }
+          }
+          return delay;
+      };
+      
+      const timeToNext13 = getTimeToNext13(currentHour, currentMinute, currentSecond, currentMillisecond, currentDay);
+      
+      if (currentDay !== 0) { // Not Sunday
+          setAndStoreTimeout(() => {
+              startSendingMail();
+              setAndStoreInterval(() => {
+                  const today = new Date().getDay();
+                  if (today !== 0) { // Not Sunday
+                      startSendingMail();
+                  }
+              }, 24 * 3600000); // 24 hours interval
+          }, timeToNext13);
+      }
 
         toast.success("Start successfully");
     } catch (error) {
@@ -263,7 +287,8 @@ export default function MailAssembly() {
     try {
       setIsProcessingAssembly21(true);
       localStorage.setItem('isProcessingAssembly21', 'true');
-
+      
+      const currentDay = new Date().getDay();
       const currentTime = new Date();
       const currentHour = currentTime.getHours();
       const currentMinute = currentTime.getMinutes();
@@ -285,33 +310,55 @@ export default function MailAssembly() {
       const getTimeToNext21 = (currentHour: number, 
         currentMinute: number, 
         currentSecond: number, 
-        currentMillisecond: number
-      ) => {
-              const targetHour = 21; // 9 PM
-              const targetMinute = 0;
-              let delay = 0;
-
-              if (currentHour < targetHour || (currentHour === targetHour && currentMinute < targetMinute)) {
+        currentMillisecond: number, currentDay: number) => {
+        const targetHour = 21; // 9 PM
+        const targetMinute = 0; // 9:00 PM
+        let delay = 0;
+    
+        const isSunday = currentDay === 0;
+        const isSaturday = currentDay === 6;
+        const isBeforeTargetTime = currentHour < targetHour || (currentHour === targetHour && currentMinute < targetMinute);
+    
+        if (isSunday) {
+            // Calculate delay to 9:00 PM on Monday
+            delay = (24 * (1 - currentDay + 7) + targetHour - currentHour) * 3600000 +
+                    (targetMinute - currentMinute) * 60000 -
+                    currentSecond * 1000 - currentMillisecond;
+        } else if (isSaturday && !isBeforeTargetTime) {
+            // Calculate delay to 9:00 PM on Monday
+            delay = (24 * (1 - currentDay + 7) + targetHour - currentHour) * 3600000 +
+                    (targetMinute - currentMinute) * 60000 -
+                    currentSecond * 1000 - currentMillisecond;
+        } else {
+            if (isBeforeTargetTime) {
                 // Calculate delay to 9:00 PM today
                 delay = (targetHour - currentHour) * 3600000 +
                         (targetMinute - currentMinute) * 60000 -
                         currentSecond * 1000 - currentMillisecond;
-              } else {
-                  // Calculate delay to 9:00 PM the next day
-                  delay = (24 - currentHour + targetHour) * 3600000 +
-                          (targetMinute - currentMinute) * 60000 -
-                          currentSecond * 1000 - currentMillisecond;
-              }
-              return delay;
-            };
-
-      const timeToNext21 = getTimeToNext21(currentHour, currentMinute, currentSecond, currentMillisecond);
-
-      setAndStoreTimeout(() => {
-          startSendingMail21();
-          setAndStoreInterval(startSendingMail21, 24 * 3600000); // 24 hours interval
-      }, timeToNext21);
-
+            } else {
+                // Calculate delay to 9:00 PM the next day
+                delay = (24 - currentHour + targetHour) * 3600000 +
+                        (targetMinute - currentMinute) * 60000 -
+                        currentSecond * 1000 - currentMillisecond;
+            }
+        }
+        return delay;
+    };
+    
+    const timeToNext21 = getTimeToNext21(currentHour, currentMinute, currentSecond, currentMillisecond, currentDay);
+    
+    if (currentDay !== 0) { // Not Sunday
+        setAndStoreTimeout(() => {
+            startSendingMail21();
+            setAndStoreInterval(() => {
+                const today = new Date().getDay();
+                if (today !== 0) { // Not Sunday
+                    startSendingMail21();
+                }
+            }, 24 * 3600000); // 24 hours interval
+        }, timeToNext21);
+    }
+    
       toast.success("Start successfully");
   } catch (error) {
       console.error('Error:', error);
